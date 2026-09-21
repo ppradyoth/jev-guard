@@ -1,0 +1,8 @@
+- id: jev-guard
+  name: jev-guard
+  description: Audit Jev / TypeSafe guardrail usage.
+  entry: jev-guard scan
+  language: python
+  types: [python]
+  pass_filenames: false
+  args: ["."]

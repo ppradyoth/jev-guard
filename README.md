@@ -1,5 +1,7 @@
 # jev-guard
 
+[![ci](https://github.com/ppradyoth/jev-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/ppradyoth/jev-guard/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) ![python](https://img.shields.io/badge/python-3.10%2B-blue)
+
 Static auditor for code that uses [Jev / TypeSafe "System One" models](https://typesafe.ai) as a security guardrail.
 
 **Thesis: type-safe is not the same as correct.** Jev can't emit a type error and it can't hallucinate a field — but "no hallucination" is a guarantee about *shape*, not about *truth*. A guardrail that returns a confidently wrong `noul: 0.02` for a `rm -rf /` still lets the call through. If you gate `bash` on that number, the type safety bought you nothing.
@@ -38,6 +40,28 @@ Exit code is non-zero when any finding is at or above `--fail-on`, so it drops s
 
 ```yaml
 - run: jev-guard scan src/ --fail-on HIGH
+```
+
+## In CI (GitHub Action)
+
+```yaml
+- uses: ppradyoth/jev-guard@v0.3.0
+  with:
+    path: src/
+    fail-on: HIGH
+```
+
+Surface findings in the **Security** tab by emitting SARIF and uploading it —
+see [`examples/github-workflow.yml`](examples/github-workflow.yml).
+
+## Pre-commit
+
+```yaml
+repos:
+  - repo: https://github.com/ppradyoth/jev-guard
+    rev: v0.3.0
+    hooks:
+      - id: jev-guard
 ```
 
 ## What it flags

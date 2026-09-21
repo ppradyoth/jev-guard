@@ -1,0 +1,21 @@
+# Example: run jev-guard in CI and surface findings in the Security tab.
+name: jev-guard
+on: [push, pull_request]
+permissions:
+  security-events: write
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ppradyoth/jev-guard@v0.3.0
+        with:
+          path: src/
+          format: sarif
+          output: jev-guard.sarif
+          fail-on: HIGH
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: jev-guard.sarif

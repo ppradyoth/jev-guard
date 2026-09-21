@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 
+from . import __version__
 from .findings import Severity
+from .formats import to_json, to_sarif
 from .rules import RULES
 from .scanner import scan_path
 
@@ -41,21 +42,15 @@ def main(argv: list[str] | None = None) -> int:
         prog="jev-guard",
         description="Audit code that uses Jev / TypeSafe System One models as a guardrail.",
     )
+    parser.add_argument("--version", action="version", version=f"jev-guard {__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     scan = sub.add_parser("scan", help="Scan a file or directory.")
     scan.add_argument("path")
-    scan.add_argument("--format", choices=["text", "json"], default="text")
-    scan.add_argument(
-        "--min-severity",
-        default="INFO",
-        help="Only report findings at or above this severity (default: INFO).",
-    )
-    scan.add_argument(
-        "--fail-on",
-        default="HIGH",
-        help="Exit non-zero if any finding is at or above this severity (default: HIGH).",
-    )
+    scan.add_argument("--format", choices=["text", "json", "sarif"], default="text")
+    scan.add_argument("--min-severity", default="INFO")
+    scan.add_argument("--fail-on", default="HIGH")
+    scan.add_argument("--output", "-o", help="Write report to a file instead of stdout.")
     scan.add_argument("--no-color", action="store_true")
 
     sub.add_parser("rules", help="List the rules jev-guard checks.")
@@ -73,10 +68,18 @@ def main(argv: list[str] | None = None) -> int:
     findings = [f for f in scan_path(args.path) if f.severity >= min_sev]
 
     if args.format == "json":
-        print(json.dumps([f.to_dict() for f in findings], indent=2))
+        report = to_json(findings)
+    elif args.format == "sarif":
+        report = to_sarif(findings, __version__)
     else:
-        use_color = (not args.no_color) and sys.stdout.isatty()
-        print(_fmt_text(findings, use_color))
+        use_color = (not args.no_color) and sys.stdout.isatty() and not args.output
+        report = _fmt_text(findings, use_color)
+
+    if args.output:
+        with open(args.output, "w", encoding="utf-8") as fh:
+            fh.write(report + "\n")
+    else:
+        print(report)
 
     return 1 if any(f.severity >= fail_on for f in findings) else 0
 

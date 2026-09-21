@@ -2,6 +2,22 @@
 
 All notable changes to jev-guard are documented here. Versioning is semver.
 
+## [0.3.0] - 2026-09-22
+
+### Added
+- **SARIF output** (`--format sarif`) for GitHub code-scanning / the Security tab.
+- **`--output/-o`** to write a report to a file.
+- **Composite GitHub Action** (`ppradyoth/jev-guard@v0.3.0`) and a **pre-commit
+  hook** (`.pre-commit-hooks.yaml`) for one-line CI/local adoption.
+- `--version` flag.
+- Contributor docs: `CONTRIBUTING.md`, `docs/adding-a-rule.md`, issue templates.
+- Example consumer workflow that uploads SARIF to code scanning.
+
+### Note
+- Generalization beyond Jev is via `.jev-guard.toml` (`extra.import_roots`,
+  `extra.guardrail_calls`, `extra.dangerous_tools`) — point jev-guard at any
+  System One-style guardrail without a code change.
+
 ## [0.2.0] - 2026-09-22
 
 ### Added
