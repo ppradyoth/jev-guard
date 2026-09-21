@@ -22,7 +22,7 @@ The documented example is literally `AutoModeMiddleware(tools=["bash"])` — a s
 ## Install
 
 ```bash
-pip install jev-guard      # once published
+pip install jevg           # PyPI package name (the CLI command is still `jev-guard`)
 # or, from source:
 git clone https://github.com/ppradyoth/jev-guard && cd jev-guard
 pip install -e .

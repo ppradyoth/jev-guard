@@ -5,6 +5,11 @@ All notable changes to jev-guard are documented here. Versioning is semver.
 ## [0.3.0] - 2026-09-22
 
 ### Added
+- **Published to PyPI as `jevg`** (`pip install jevg`; the CLI command is
+  `jev-guard`, with `jevg` as an alias). The GitHub repo stays `jev-guard`.
+
+
+### Added
 - **SARIF output** (`--format sarif`) for GitHub code-scanning / the Security tab.
 - **`--output/-o`** to write a report to a file.
 - **Composite GitHub Action** (`ppradyoth/jev-guard@v0.3.0`) and a **pre-commit
