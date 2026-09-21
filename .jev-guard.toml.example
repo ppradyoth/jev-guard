@@ -1,0 +1,11 @@
+# Copy to .jev-guard.toml at your repo root.
+[jev-guard]
+disable = []
+
+[jev-guard.severity]
+# JG004 = "HIGH"
+
+[jev-guard.extra]
+dangerous_tools = []
+import_roots = []
+guardrail_calls = []

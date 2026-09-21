@@ -11,20 +11,31 @@ DANGEROUS_TOOLS = frozenset({
     "http", "request", "requests", "fetch", "send_email", "email", "transfer",
 })
 
-# kwargs that indicate a caller has actually configured how the guardrail
-# decides to block, rather than relying on Jev's default point decision.
+# kwargs that indicate a caller has configured how the guardrail decides to
+# block, rather than relying on Jev's default point decision.
 THRESHOLD_KWARGS = frozenset({
     "threshold", "thresholds", "confidence", "min_confidence", "block_threshold",
     "block_at", "decision_threshold", "review_threshold", "auto_threshold",
     "escalate_below", "on_low_confidence",
 })
 
-# Variable name fragments suggesting attacker-influenced content that should not
-# flow unmodified into a guardrail's `state`.
+# kwargs whose value is a probability above which the guardrail *blocks*. A high
+# value here means "only block when almost certain" -> most attacks pass.
+BLOCK_KWARGS = frozenset({
+    "threshold", "block_threshold", "block_at", "decision_threshold", "auto_threshold",
+})
+
+# kwargs whose value is a confidence below which the guardrail *escalates*. A low
+# value here means "almost never escalate" -> low-confidence calls silently pass.
+ESCALATE_KWARGS = frozenset({
+    "min_confidence", "escalate_below", "review_threshold", "confidence",
+})
+
+# Variable name fragments suggesting attacker-influenced content.
 UNTRUSTED_HINTS = frozenset({
     "user", "input", "message", "msg", "content", "payload", "request",
     "body", "prompt", "query", "tool_output", "tool_result", "external",
-    "untrusted", "email_body", "resume", "ticket",
+    "untrusted", "email_body", "resume", "ticket", "comment", "webhook",
 })
 
 JEV_IMPORT_ROOTS = frozenset({"langchain_typesafe", "typesafe"})
@@ -66,5 +77,21 @@ RULES = {
         "Validate block/escalate thresholds against your own adversarial "
         "workload. Jev's published evals are self-graded on non-adversarial "
         "distributions; calibration under attack is unproven.",
+    ),
+    "JG006": (
+        Severity.MEDIUM,
+        "Jev guardrail threshold set in an unsafe band",
+        "The block threshold is set so high (or the escalate-below confidence so "
+        "low) that the guardrail only reacts to near-certain danger. Adversarial "
+        "input is designed to sit in the ambiguous middle. Bias the block "
+        "threshold low and escalate generously.",
+    ),
+    "JG007": (
+        Severity.HIGH,
+        "Untrusted content interpolated into a Jev question's instructions",
+        "Attacker-influenceable text is concatenated or formatted into the "
+        "`instructions` of a question. That lets the inspected content rewrite "
+        "the question itself, collapsing the guardrail. Keep instructions static "
+        "and pass untrusted data only as `state`.",
     ),
 }

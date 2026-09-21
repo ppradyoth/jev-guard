@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jev-guard"
-version = "0.1.0"
+version = "0.2.0"
 description = "Static auditor for code that uses Jev / TypeSafe System One models as a security guardrail."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,7 +17,7 @@ classifiers = [
   "Topic :: Security",
   "Programming Language :: Python :: 3",
 ]
-dependencies = []
+dependencies = ["tomli>=2.0; python_version < '3.11'"]
 
 [project.urls]
 Homepage = "https://github.com/ppradyoth/jev-guard"

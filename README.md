@@ -49,6 +49,8 @@ Exit code is non-zero when any finding is at or above `--fail-on`, so it drops s
 | JG003 | MEDIUM   | A `.noul`/`.choice`/`.score` decision is used to branch without ever reading a confidence field. |
 | JG004 | MEDIUM   | Attacker-influenceable content flows straight into a guardrail's `state` (injection surface). |
 | JG005 | INFO     | Jev is being used as a security control — reminder to validate thresholds against your own adversarial data. |
+| JG006 | MEDIUM   | Threshold set in an unsafe band (blocks only near-certain danger / almost never escalates). |
+| JG007 | HIGH     | Untrusted content interpolated into a question's `instructions` — the inspected text can rewrite the question. |
 
 Full rationale and remediation for each: [`GUIDE.md`](GUIDE.md).
 
@@ -62,6 +64,32 @@ examples/vulnerable_agent.py:11 [MEDIUM] JG004  Untrusted content flows into a J
     ↳ Separate and sanitize untrusted state.
 ...
 ```
+
+## Configuration
+
+Drop a `.jev-guard.toml` at your repo root (jev-guard walks up to find it):
+
+```toml
+[jev-guard]
+disable = ["JG005"]            # rules to silence entirely
+
+[jev-guard.severity]
+JG004 = "HIGH"                 # bump a rule's severity
+
+[jev-guard.extra]
+dangerous_tools = ["wire_transfer", "post_tweet"]   # your own high-impact tools
+import_roots    = ["my_typesafe_wrapper"]           # if you wrap the SDK
+guardrail_calls = ["MyGuardrail"]                   # your own guardrail factory
+```
+
+Silence a single line inline:
+
+```python
+guardrail = AutoModeMiddleware(tools=["bash"])  # jev-guard: ignore JG001
+another = AutoModeMiddleware(tools=["bash"])     # jev-guard: ignore
+```
+
+jev-guard follows assignments, so indirection is caught — `tools = ["bash"]; create_agent(tools=tools)` and `s = user_msg; classifier.invoke({"state": s})` both flag.
 
 ## Scope and honesty
 
