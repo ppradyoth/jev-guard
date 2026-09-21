@@ -2,7 +2,9 @@
 
 [![ci](https://github.com/ppradyoth/jev-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/ppradyoth/jev-guard/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 
-Static auditor for code that uses [Jev / TypeSafe "System One" models](https://typesafe.ai) as a security guardrail.
+**A static code scanner (SAST-style linter).** It reads your Python source and flags insecure usage of [Jev / TypeSafe "System One" models](https://typesafe.ai) when they're used as a security guardrail.
+
+> jev-guard is **not** a guardrail and it does **not** run at runtime, call the model, or touch the network. It is a build-time analysis tool — think `ruff`/`bandit`, scoped to Jev guardrail patterns. It tells you where your guardrail *code* is misconfigured; it does not do any guarding itself.
 
 **Thesis: type-safe is not the same as correct.** Jev can't emit a type error and it can't hallucinate a field — but "no hallucination" is a guarantee about *shape*, not about *truth*. A guardrail that returns a confidently wrong `noul: 0.02` for a `rm -rf /` still lets the call through. If you gate `bash` on that number, the type safety bought you nothing.
 
