@@ -2,6 +2,12 @@
 
 All notable changes to jev-guard are documented here. Versioning is semver.
 
+## [0.3.1] - 2026-09-22
+
+### Fixed
+- GitHub Action now installs the correct PyPI package (`jevg`, latest) instead of the unpublished `jev-guard==0.3.0`. `uses: ppradyoth/jev-guard@v0.3.1`
+  now works end to end.
+
 ## [0.3.0] - 2026-09-22
 
 ### Added

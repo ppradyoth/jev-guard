@@ -25,7 +25,7 @@ runs:
   steps:
     - shell: bash
       run: |
-        python -m pip install --quiet "jevg==0.3.0"
+        python -m pip install --quiet jevg
         args=(scan "${{ inputs.path }}" --fail-on "${{ inputs.fail-on }}" --format "${{ inputs.format }}")
         if [ -n "${{ inputs.output }}" ]; then args+=(--output "${{ inputs.output }}"); fi
         jev-guard "${args[@]}"

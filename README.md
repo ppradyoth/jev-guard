@@ -47,7 +47,7 @@ Exit code is non-zero when any finding is at or above `--fail-on`, so it drops s
 ## In CI (GitHub Action)
 
 ```yaml
-- uses: ppradyoth/jev-guard@v0.3.0
+- uses: ppradyoth/jev-guard@v0.3.1
   with:
     path: src/
     fail-on: HIGH
@@ -61,7 +61,7 @@ see [`examples/github-workflow.yml`](examples/github-workflow.yml).
 ```yaml
 repos:
   - repo: https://github.com/ppradyoth/jev-guard
-    rev: v0.3.0
+    rev: v0.3.1
     hooks:
       - id: jev-guard
 ```
