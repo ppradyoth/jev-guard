@@ -2,6 +2,13 @@
 
 All notable changes to jev-guard are documented here. Versioning is semver.
 
+## [0.4.0] - 2026-09-23
+
+### Added
+- **JG008** — a forced-choice `choice` question with no abstain option (none / unsure / escalate). Un-abstaining models guess when nothing fits.
+- **JG009** — Jev used as the terminal judge of a dangerous action with no escalation path. Jev should *route to something smarter*, not be the final word. Encodes the 'router, not judge' principle.
+- GUIDE: new 'router, not judge' design-principle section.
+
 ## [0.3.1] - 2026-09-22
 
 ### Fixed

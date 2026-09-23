@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jevg"
-version = "0.3.1"
+version = "0.4.0"
 description = "Static auditor for code that uses Jev / TypeSafe System One models as a security guardrail."
 readme = "README.md"
 requires-python = ">=3.10"

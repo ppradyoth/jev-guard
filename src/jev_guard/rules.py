@@ -38,6 +38,22 @@ UNTRUSTED_HINTS = frozenset({
     "untrusted", "email_body", "resume", "ticket", "comment", "webhook",
 })
 
+# An escape option in a choice question, so a forced-choice model isn't made to
+# pick a wrong answer when none fits. Matched against option labels/keys.
+ABSTAIN_TOKENS = frozenset({
+    "none", "no", "unsure", "unknown", "unclear", "uncertain", "abstain",
+    "escalate", "human", "review", "other", "na", "n/a", "cannot", "no_decision",
+    "needs_review", "idk", "defer",
+})
+
+# Evidence that code can route a decision to something smarter than Jev instead
+# of only block/allow. Matched against names and string literals in the module.
+ESCALATE_VOCAB = frozenset({
+    "escalate", "human", "review", "approve", "manual", "queue", "handoff",
+    "oversight", "on_low_confidence", "escalate_below", "ask_human",
+    "needs_review", "second_opinion", "defer",
+})
+
 JEV_IMPORT_ROOTS = frozenset({"langchain_typesafe", "typesafe"})
 
 RULES = {
@@ -93,5 +109,22 @@ RULES = {
         "`instructions` of a question. That lets the inspected content rewrite "
         "the question itself, collapsing the guardrail. Keep instructions static "
         "and pass untrusted data only as `state`.",
+    ),
+    "JG008": (
+        Severity.HIGH,
+        "Forced-choice question has no abstain option",
+        "A `choice` question offers only substantive options, so the model must "
+        "pick one even when none fits — a forced-choice model does not abstain, it "
+        "guesses, often confidently. Add an explicit escape option (none / unsure / "
+        "escalate) and route to a human or a stronger model when it wins.",
+    ),
+    "JG009": (
+        Severity.HIGH,
+        "Jev is the terminal judge of a dangerous action, with no escalation path",
+        "A Jev decision gates a high-impact action but the code can only block or "
+        "allow — it never routes to a human or a stronger model. Jev is a router, "
+        "not a judge: an un-abstaining classifier should decide *whether to ask "
+        "someone smarter*, not be the final word on an irreversible action. Add a "
+        "low-confidence escalation branch.",
     ),
 }

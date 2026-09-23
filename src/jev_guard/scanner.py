@@ -8,9 +8,11 @@ from pathlib import Path
 from .config import Config
 from .findings import Finding
 from .rules import (
+    ABSTAIN_TOKENS,
     BLOCK_KWARGS,
     DANGEROUS_TOOLS,
     ESCALATE_KWARGS,
+    ESCALATE_VOCAB,
     JEV_IMPORT_ROOTS,
     RULES,
     THRESHOLD_KWARGS,
@@ -159,6 +161,57 @@ def _instruction_values(tree: ast.AST) -> list[ast.AST]:
     return vals
 
 
+def _choice_option_strings(tree: ast.AST) -> list[tuple[int, list[str]]]:
+    """For each choice question, return (line, option labels). Handles both
+    Choice(options=[...]) / Choice(criteria={...}) and dict questions with
+    {"type": "choice", "options"|"criteria": ...}."""
+    out: list[tuple[int, list[str]]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and _call_name(node) == "Choice":
+            opts = [
+                kw.value for kw in node.keywords if kw.arg in {"options", "criteria"}
+            ]
+            labels = [s for v in opts for s in _option_labels(v)]
+            if labels:
+                out.append((node.lineno, labels))
+        if isinstance(node, ast.Dict):
+            is_choice = any(
+                isinstance(k, ast.Constant) and k.value == "type"
+                and isinstance(v, ast.Constant) and v.value == "choice"
+                for k, v in zip(node.keys, node.values, strict=False)
+            )
+            if not is_choice:
+                continue
+            for k, v in zip(node.keys, node.values, strict=False):
+                if isinstance(k, ast.Constant) and k.value in {"options", "criteria"}:
+                    labels = _option_labels(v)
+                    if labels:
+                        out.append((getattr(node, "lineno", 1), labels))
+    return out
+
+
+def _option_labels(node: ast.AST) -> list[str]:
+    if isinstance(node, ast.Dict):
+        return [
+            k.value for k in node.keys
+            if isinstance(k, ast.Constant) and isinstance(k.value, str)
+        ]
+    if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+        return [
+            e.value for e in node.elts
+            if isinstance(e, ast.Constant) and isinstance(e.value, str)
+        ]
+    return []
+
+
+def _has_abstain(labels: list[str]) -> bool:
+    for label in labels:
+        low = label.lower()
+        if any(tok in low for tok in ABSTAIN_TOKENS):
+            return True
+    return False
+
+
 def scan_source(source: str, filename: str, config: Config | None = None) -> list[Finding]:
     config = config or Config()
     try:
@@ -190,8 +243,18 @@ def scan_source(source: str, filename: str, config: Config | None = None) -> lis
         for n in ast.walk(tree)
     ) or any(kw.arg in THRESHOLD_KWARGS for c in calls for kw in c.keywords if kw.arg)
 
+    module_names = {n.id.lower() for n in ast.walk(tree) if isinstance(n, ast.Name)}
+    module_strings = " ".join(
+        c.value.lower() for c in ast.walk(tree)
+        if isinstance(c, ast.Constant) and isinstance(c.value, str)
+    )
+    has_escalation = any(
+        v in nm for v in ESCALATE_VOCAB for nm in module_names
+    ) or any(v in module_strings for v in ESCALATE_VOCAB)
+
     findings: list[Finding] = []
     guarded = False
+    dangerous_context = bool(taint.dangerous)
 
     def emit(code: str, line: int) -> None:
         findings.append(_finding(code, filename, line, config))
@@ -220,6 +283,11 @@ def scan_source(source: str, filename: str, config: Config | None = None) -> lis
                     emit("JG004", call.lineno)
                     break
 
+        if name in guardrail_calls or name in {"create_agent", "ToolNode"}:
+            for kw in call.keywords:
+                if kw.arg == "tools" and taint.is_dangerous(kw.value):
+                    dangerous_context = True
+
         if name in {"create_agent", "ToolNode"}:
             for kw in call.keywords:
                 if kw.arg == "tools" and taint.is_dangerous(kw.value) and not has_automode:
@@ -237,6 +305,13 @@ def scan_source(source: str, filename: str, config: Config | None = None) -> lis
         ]
         if decisions and not reads_confidence:
             emit("JG003", decisions[0].lineno)
+        if dangerous_context and not has_escalation:
+            emit("JG009", next(
+                (c.lineno for c in calls if _call_name(c) in guardrail_calls), 1))
+
+    for line, labels in _choice_option_strings(tree):
+        if not _has_abstain(labels):
+            emit("JG008", line)
 
     suppress = _suppressions(source)
     result = []

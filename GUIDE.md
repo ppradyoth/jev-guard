@@ -10,6 +10,32 @@ A guardrail's job is to be right about "is this action dangerous?" A type-safe w
 
 `jev-guard` finds the places in your code where a well-formed-but-possibly-wrong decision is trusted more than it should be.
 
+## The design principle: router, not judge
+
+Jev is a forced-choice model. Give it options and it picks one — it does **not
+abstain**. Give it three wrong options and it returns one of them, sometimes at
+high confidence. "No hallucination" guarantees the answer is well-formed, not
+that it is right, and the confidence number is only useful if it stays honest
+under adversarial input (unproven — that's what a live probe measures).
+
+The safe shape follows from this:
+
+- **Use Jev to route, never to judge.** Its job is to decide *whether to ask
+  someone smarter* — a stronger model or a human — not to be the final word on
+  an irreversible action. `jev-guard` flags a Jev decision that terminally gates
+  a dangerous action with no escalation path (JG009).
+- **Always give a forced choice an escape hatch.** Every `choice` question that
+  drives a security decision needs a `none` / `unsure` / `escalate` option, and
+  code that routes to review when it wins. A choice with only substantive
+  options makes the model guess (JG008).
+- **Escalate on low confidence.** Reading the confidence isn't enough; branch on
+  it. High confidence acts, low confidence goes to a human or a stronger model.
+
+Put deterministically: Jev belongs on the *triage* path (is this change worth
+waking the expensive reviewer?), not on the *verdict* path. A triage gate is
+still a control surface an attacker will shape their input to slip — so
+threat-model it, don't sprinkle it in as a free lookup.
+
 ## When to use it
 
 - You use `langchain_typesafe`, `AutoModeMiddleware`, or `TypeSafeClassifier` anywhere a decision leads to an action — routing, tool gating, auto-approval, content moderation.

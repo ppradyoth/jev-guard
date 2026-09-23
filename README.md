@@ -77,6 +77,8 @@ repos:
 | JG005 | INFO     | Jev is being used as a security control — reminder to validate thresholds against your own adversarial data. |
 | JG006 | MEDIUM   | Threshold set in an unsafe band (blocks only near-certain danger / almost never escalates). |
 | JG007 | HIGH     | Untrusted content interpolated into a question's `instructions` — the inspected text can rewrite the question. |
+| JG008 | HIGH     | Forced-choice question with no abstain option — an un-abstaining model is made to guess. |
+| JG009 | HIGH     | Jev is the terminal judge of a dangerous action with no escalation path (should route, not judge). |
 
 Full rationale and remediation for each: [`GUIDE.md`](GUIDE.md).
 
