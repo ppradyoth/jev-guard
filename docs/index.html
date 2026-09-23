@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jev-guard — catch insecure Jev guardrails before they ship</title>
+<meta name="description" content="A static code scanner that finds insecure usage of Jev / TypeSafe System One models used as security guardrails. Your SAST passes the file. jev-guard finds the trust bug.">
+<style>
+  :root{
+    --bg:#0c0e11; --panel:#14171c; --panel2:#181c22; --line:#242a32;
+    --text:#e7eaee; --muted:#98a2ad; --accent:#e5484d; --accent2:#4cc38a;
+    --amber:#f5a524; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+  nav{position:sticky;top:0;background:rgba(12,14,17,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:10}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+  .brand{font-family:var(--mono);font-weight:600;letter-spacing:-.01em}
+  .brand b{color:var(--accent)}
+  nav .links a{color:var(--muted);text-decoration:none;font-size:14px;margin-left:18px}
+  nav .links a:hover{color:var(--text)}
+  header{padding:72px 0 40px;border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--mono);color:var(--accent);font-size:13px;letter-spacing:.02em;margin-bottom:18px}
+  h1{font-size:44px;line-height:1.08;margin:0 0 18px;letter-spacing:-.02em}
+  h1 .b{color:var(--muted)}
+  .lede{font-size:19px;color:var(--muted);max-width:640px;margin:0 0 28px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-block;padding:11px 18px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{border:1px solid var(--line);color:var(--text)}
+  .install{font-family:var(--mono);font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:11px 14px;color:var(--text)}
+  .install .p{color:var(--accent2)}
+  section{padding:56px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:28px;letter-spacing:-.01em;margin:0 0 8px}
+  h2 .hook{color:var(--muted);font-weight:400}
+  .sub{color:var(--muted);margin:0 0 28px;max-width:680px}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;overflow:auto;font-family:var(--mono);font-size:13.5px;line-height:1.5;margin:0}
+  code{font-family:var(--mono)}
+  .cmt{color:#6b7684}
+  .red{color:var(--accent)} .grn{color:var(--accent2)} .amb{color:var(--amber)} .mut{color:var(--muted)}
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  .tool{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .tool.win{border-color:#3a2b2c;background:linear-gradient(180deg,#181316,#14171c)}
+  .tool h3{margin:0 0 6px;font-size:15px;font-family:var(--mono)}
+  .tool .out{font-family:var(--mono);font-size:13.5px}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;vertical-align:middle}
+  .t-high{background:#3a2426;color:#ff6b6b} .t-med{background:#3a3324;color:var(--amber)} .t-info{background:#20262e;color:var(--muted)} .t-crit{background:var(--accent);color:#fff}
+  .rules{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .rule{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .rule .id{font-family:var(--mono);font-weight:700;font-size:13px}
+  .rule p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+  .callout{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:20px 22px}
+  .callout b{color:var(--text)}
+  .stat{font-family:var(--mono);color:var(--accent);font-weight:700}
+  .grid2{display:grid;grid-template-columns:1fr;gap:22px}
+  footer{padding:40px 0;color:var(--muted);font-size:14px}
+  footer a{color:var(--muted)}
+  .disc{font-size:13px;color:#6b7684;margin-top:10px}
+  @media(min-width:720px){
+    .cmp{grid-template-columns:1fr 1fr 1fr}
+    h1{font-size:56px}
+  }
+  @media(max-width:520px){ .rules{grid-template-columns:1fr} h1{font-size:34px} }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <span class="brand"><b>jev</b>-guard</span>
+  <span class="links">
+    <a href="#trap">The trap</a>
+    <a href="#demo">Demo</a>
+    <a href="#rules">Rules</a>
+    <a href="#use">Use it</a>
+    <a href="https://github.com/ppradyoth/jev-guard">GitHub</a>
+    <a href="https://pypi.org/project/jevg/">PyPI</a>
+  </span>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="kicker">STATIC SCANNER · OFFLINE · NO API KEY</div>
+  <h1>Type-safe isn't correct.<br><span class="b">Your guardrail still fails open.</span></h1>
+  <p class="lede">Jev can't hallucinate a field and can't throw a type error. Neither means the answer is right. A guardrail that returns a confident <code>noul: 0.02</code> for <code>rm -rf /</code> still lets the call through. jev-guard scans your code for the ways a Jev-based guardrail fails open.</p>
+  <div class="cta">
+    <a class="btn primary" href="#demo">See it beat your SAST</a>
+    <a class="btn ghost" href="https://github.com/ppradyoth/jev-guard">Source</a>
+    <span class="install"><span class="mut">$</span> pip install <span class="p">jevg</span></span>
+  </div>
+</div></header>
+
+<section id="trap"><div class="wrap">
+  <h2>The trap <span class="hook">shipped straight from the docs</span></h2>
+  <p class="sub">LangChain's <code>AutoModeMiddleware</code> uses Jev to block dangerous tool calls. The documented example gates a shell on the model's default decision, with no threshold. That is the exact shape jev-guard was built to catch.</p>
+<pre><span class="cmt"># straight from the AutoModeMiddleware blog</span>
+guardrail = AutoModeMiddleware(tools=[<span class="grn">"bash"</span>])   <span class="cmt"># no threshold. no escalation. no abstain.</span>
+agent = create_agent(<span class="grn">"openai:gpt-5.6-luna"</span>, middleware=[guardrail])</pre>
+</div></section>
+
+<section id="demo"><div class="wrap">
+  <h2>Your SAST passes this file. <span class="hook">jev-guard finds 4 HIGH.</span></h2>
+  <p class="sub">A 31-line code-review agent that gates <code>bash</code> with Jev, feeds an untrusted PR diff into <code>state</code>, and acts on the decision. Same file, three tools. bandit and ruff are not wrong — there's no <code>eval</code>, no SQL string, no <code>subprocess</code>. The danger is trusting an un-abstaining classifier on a control path, which pattern-based SAST can't see.</p>
+  <div class="cmp">
+    <div class="tool"><h3>bandit</h3><div class="out"><span class="grn">No issues identified.</span></div></div>
+    <div class="tool"><h3>ruff (S rules)</h3><div class="out"><span class="grn">All checks passed!</span></div></div>
+    <div class="tool win"><h3 class="red">jev-guard</h3><div class="out"><span class="red">8 findings · 4 HIGH</span></div></div>
+  </div>
+  <div style="height:16px"></div>
+<pre><span class="cmt">$ jev-guard scan review_agent.py</span>
+L8   <span class="tag t-high">HIGH</span> JG001  guardrail gates <span class="grn">bash</span> with no confidence threshold
+L8   <span class="tag t-high">HIGH</span> JG009  Jev is the terminal judge of a dangerous action, no escalation
+L18  <span class="tag t-high">HIGH</span> JG008  forced-choice question has no abstain option
+L15  <span class="tag t-med">MED </span> JG004  untrusted PR diff flows into guardrail state
+L26  <span class="tag t-med">MED </span> JG003  decision consumed without checking confidence
+     <span class="tag t-info">INFO</span> JG005  Jev used as a security control</pre>
+  <div style="height:26px"></div>
+  <div class="callout">
+    <b>And it doesn't cry wolf.</b> Run it on 94 real Python files that don't touch Jev — my copy of the anthropic-cookbook — and it prints <span class="stat">no findings</span>. Zero false positives. It's scoped to Jev guardrail patterns and silent everywhere else, so it drops into CI without adding noise.
+  </div>
+</div></section>
+
+<section id="rules"><div class="wrap">
+  <h2>What it catches</h2>
+  <p class="sub">Nine rules, each with a fix. Static AST analysis that follows variable assignments, so indirection is caught too.</p>
+  <div class="rules">
+    <div class="rule"><span class="id">JG001</span> <span class="tag t-high">HIGH</span><p>Guardrail gates actions with no configured confidence threshold.</p></div>
+    <div class="rule"><span class="id">JG002</span> <span class="tag t-crit">CRIT</span><p>Dangerous tool wired to an agent with no guardrail present.</p></div>
+    <div class="rule"><span class="id">JG003</span> <span class="tag t-med">MED</span><p>Decision consumed without ever checking calibrated confidence.</p></div>
+    <div class="rule"><span class="id">JG004</span> <span class="tag t-med">MED</span><p>Untrusted content flows into the guardrail's <code>state</code>.</p></div>
+    <div class="rule"><span class="id">JG005</span> <span class="tag t-info">INFO</span><p>Jev on a security path — validate thresholds on your own data.</p></div>
+    <div class="rule"><span class="id">JG006</span> <span class="tag t-med">MED</span><p>Threshold set in an unsafe band — blocks only near-certain danger.</p></div>
+    <div class="rule"><span class="id">JG007</span> <span class="tag t-high">HIGH</span><p>Untrusted text interpolated into a question's <code>instructions</code>.</p></div>
+    <div class="rule"><span class="id">JG008</span> <span class="tag t-high">HIGH</span><p>Forced-choice question with no abstain option — the model guesses.</p></div>
+    <div class="rule"><span class="id">JG009</span> <span class="tag t-high">HIGH</span><p>Jev as terminal judge of a dangerous action, no escalation path.</p></div>
+  </div>
+</div></section>
+
+<section id="principle"><div class="wrap">
+  <h2>Router, not judge</h2>
+  <p class="sub">Jev is a forced-choice model. Give it three wrong options and it picks one, sometimes at high confidence. It doesn't abstain.</p>
+  <div class="callout">
+    So use it to <b>route, never to judge</b>. Its job is to decide whether to wake something smarter — a stronger model or a human — not to be the last word on an irreversible action. Give every forced choice an escape option. Escalate on low confidence. And remember the triage gate is itself a control surface an attacker will shape their input to slip. jev-guard encodes all three as rules.
+  </div>
+</div></section>
+
+<section id="use"><div class="wrap">
+  <h2>Use it</h2>
+  <div class="grid2">
+    <div>
+      <p class="sub" style="margin-bottom:12px">Command line and CI gate:</p>
+<pre>pip install jevg
+jev-guard scan src/                 <span class="cmt"># scan a tree</span>
+jev-guard scan src/ --format sarif  <span class="cmt"># GitHub code scanning</span>
+jev-guard scan src/ --fail-on HIGH  <span class="cmt"># exit 1 on HIGH+</span></pre>
+    </div>
+    <div>
+      <p class="sub" style="margin-bottom:12px">GitHub Action and pre-commit:</p>
+<pre><span class="cmt"># .github/workflows/ci.yml</span>
+- uses: ppradyoth/jev-guard@v0.4.1
+  with:
+    path: src/
+    fail-on: HIGH</pre>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div><span class="brand"><b>jev</b>-guard</span> · <a href="https://github.com/ppradyoth/jev-guard">GitHub</a> · <a href="https://pypi.org/project/jevg/">PyPI (jevg)</a> · MIT</div>
+  <div class="disc">A static analysis tool. It reads your source, never the model, and never the network. Not affiliated with TypeSafe AI or LangChain.</div>
+</div></footer>
+</body>
+</html>
