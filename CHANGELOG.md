@@ -2,6 +2,11 @@
 
 All notable changes to jev-guard are documented here. Versioning is semver.
 
+## [0.4.1] - 2026-09-23
+
+### Fixed
+- JG009 no longer suppressed by the words 'review'/'human'/etc. appearing in a docstring or comment. Escalation is now detected only from identifiers, attributes, and *returned* values — prose doesn't count. (Surfaced running the tool against a realistic 'code-review agent'.)
+
 ## [0.4.0] - 2026-09-23
 
 ### Added

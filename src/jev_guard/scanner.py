@@ -244,13 +244,20 @@ def scan_source(source: str, filename: str, config: Config | None = None) -> lis
     ) or any(kw.arg in THRESHOLD_KWARGS for c in calls for kw in c.keywords if kw.arg)
 
     module_names = {n.id.lower() for n in ast.walk(tree) if isinstance(n, ast.Name)}
-    module_strings = " ".join(
-        c.value.lower() for c in ast.walk(tree)
+    module_attrs = {n.attr.lower() for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
+    # Only strings that are actually returned count as an escalation signal — a
+    # docstring or comment mentioning "review" is prose, not a routing path.
+    returned_strings = " ".join(
+        c.value.lower()
+        for r in ast.walk(tree)
+        if isinstance(r, ast.Return) and r.value is not None
+        for c in ast.walk(r.value)
         if isinstance(c, ast.Constant) and isinstance(c.value, str)
     )
-    has_escalation = any(
-        v in nm for v in ESCALATE_VOCAB for nm in module_names
-    ) or any(v in module_strings for v in ESCALATE_VOCAB)
+    has_escalation = (
+        any(v in nm for v in ESCALATE_VOCAB for nm in module_names | module_attrs)
+        or any(v in returned_strings for v in ESCALATE_VOCAB)
+    )
 
     findings: list[Finding] = []
     guarded = False

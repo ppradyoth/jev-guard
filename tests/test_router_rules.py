@@ -41,3 +41,13 @@ def test_jg009_inline_abstain_option_counts_as_escalation():
         "def h():\n    return review_queue()\n"
     )
     assert "JG009" not in codes(src)
+
+
+def test_jg009_docstring_review_does_not_suppress():
+    src = (
+        '"""A code-review agent."""\n'
+        "from langchain_typesafe.experimental.middleware import AutoModeMiddleware\n"
+        "g = AutoModeMiddleware(tools=['bash'], block_threshold=0.2)\n"
+        "def run(state):\n    return 'auto_merge' if ok else 'run_tests'\n"
+    )
+    assert "JG009" in {f.code for f in scan_source(src, "x.py")}
