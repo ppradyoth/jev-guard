@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/ppradyoth/jev-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/ppradyoth/jev-guard/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 
-**[→ jev-guard.dev site & live demo](https://ppradyoth.github.io/jev-guard/)**
+**[→ Site & live demo](https://ppradyoth.github.io/jev-guard/)**
 
 **A static code scanner (SAST-style linter).** It reads your Python source and flags insecure usage of [Jev / TypeSafe "System One" models](https://typesafe.ai) when they're used as a security guardrail.
 
